@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Refund Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8f5e9; /* Light green background */
+            margin: 0;
+            padding: 0;
+            display: flex; /* Use flexbox for centering */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height */
+        }
+        .container {
+            width: 320px; /* Width of the container */
+            text-align: center;
+            padding-top: 30px; /* Padding for the title */
+            background-color: #ffffff; /* White background for the container */
+            border-radius: 8px; /* Rounded corners */
+            border: 2px solid #4CAF50; /* Thicker green border */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            padding-bottom: 20px; /* Extra space at the bottom */
+        }
+        h1 {
+            margin: 0 0 20px; /* Reduced bottom margin for title */
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 8px;
+            width: calc(100% - 16px); /* Ensure input fits within the container with padding */
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .legend {
+            font-size: 0.8em; /* Smaller font size for the legend */
+            color: #555; /* Dark gray color for better readability */
+            margin-top: 20px; /* Space above the legend */
+            text-align: left; /* Align text to the left */
+            padding: 10px; /* Padding around the legend text */
+            background-color: #f1f1f1; /* Light background for the legend */
+            border-radius: 4px; /* Rounded corners for the legend */
+        }
+
+        /* Custom dropdown styling */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 15px; /* Space below dropdown */
+        }
+
+        .dropdown-select {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .dropdown-select img {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+
+        .dropdown-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            z-index: 1;
+        }
+
+        .dropdown-option {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-option:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown-option img {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Total Refund Calculator</h1>
+    <label>Select Country:</label>
+
+    <!-- Custom dropdown -->
+    <div class="dropdown" id="countryDropdown">
+        <div class="dropdown-select" onclick="toggleDropdown()">
+            <img id="selectedFlag" src="lb.png" alt="Country flag"> 
+            <span id="selectedCountry">Liberia (USD)</span>
+        </div>
+        <div class="dropdown-options">
+            <div class="dropdown-option" onclick="selectCountry('liberia', 'lr.png')">
+                <img src="lr.png" alt="Liberia flag"> Liberia (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('haiti', 'ht.png')">
+                <img src="ht.png" alt="Haiti flag"> Haiti (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('lebanon', 'lb.png')">
+                <img src="lb.png" alt="Lebanon flag"> Lebanon (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('vietnam', 'vn.png')">
+                <img src="vn.png" alt="Vietnam flag"> Vietnam (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('drc', 'cd.png')">
+                <img src="cd.png" alt="DR Congo flag"> Democratic Republic of Congo (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('elsalvador', 'sv.png')">
+                <img src="sv.png" alt="El Salvador flag"> El Salvador (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('peru', 'pe.png')">
+                <img src="pe.png" alt="Peru flag"> Peru (USD)
+            </div>
+            <div class="dropdown-option" onclick="selectCountry('nicaragua', 'ni.png')">
+                <img src="ni.png" alt="Nicaragua flag"> Nicaragua (USD)
+            </div>
+        </div>
+    </div>
+
+    <label for="amount">Original Amount Sent:</label>
+    <input type="number" id="amount" placeholder="Enter amount in USD">
+
+    <button onclick="calculateRefund()">Calculate Refund</button>
+
+    <div class="result" id="result"></div>
+
+    <!-- Legend Section -->
+    <div class="legend">
+        Note: If your country is not listed, it means there are no fees, and the refund amount will be equal to the original amount sent.
+    </div>
+</div>
+
+<script>
+    let selectedCountry = "liberia"; // Default selected country
+
+    const feeData = {
+        liberia: { feeRate: 0.03, cap: 10 },
+        haiti: { feeRate: 0.025, cap: 12 },
+        lebanon: { feeRate: 0.035, cap: 20 },
+        vietnam: { feeRate: 0.02, cap: 15 },
+        drc: { feeRate: 0.0275, cap: 15 },
+        elsalvador: { feeRate: 0.03, cap: 7.49 },
+        peru: { feeRate: 0.025, cap: 10 },
+        nicaragua: { feeRate: 0.024, cap: 7.49 }
+    };
+
+    function toggleDropdown() {
+        const options = document.querySelector('.dropdown-options');
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function selectCountry(country, flagSrc) {
+        selectedCountry = country;
+        document.getElementById("selectedFlag").src = flagSrc;
+        document.getElementById("selectedCountry").textContent = `${country.charAt(0).toUpperCase() + country.slice(1)} (USD)`;
+        document.querySelector('.dropdown-options').style.display = 'none';
+    }
+
+    function calculateRefund() {
+        const amount = parseFloat(document.getElementById("amount").value);
+
+        if (isNaN(amount) || amount <= 0) {
+            document.getElementById("result").textContent = "Please enter a valid amount.";
+            return;
+        }
+
+        const { feeRate, cap } = feeData[selectedCountry];
+        const fee = Math.min(amount * feeRate, cap);
+        const totalRefund = amount + fee;
+
+        document.getElementById("result").textContent = `Total Refund Amount: $${totalRefund}`;
+    }
+</script>
+</body>
+</html>
