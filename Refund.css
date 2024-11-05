@@ -131,13 +131,13 @@
                 <img src="lr.png" alt="Liberia flag"> Liberia (USD)
             </div>
             <div class="dropdown-option" onclick="selectCountry('haiti', 'ht.png')">
-                <img src="ht.png" alt="Haiti flag"> Haiti (USD)
+                <img src="ht.png" alt="Haiti flag"> Haiti-USD Savings(USD)
             </div>
             <div class="dropdown-option" onclick="selectCountry('lebanon', 'lb.png')">
                 <img src="lb.png" alt="Lebanon flag"> Lebanon (USD)
             </div>
             <div class="dropdown-option" onclick="selectCountry('vietnam', 'vn.png')">
-                <img src="vn.png" alt="Vietnam flag"> Vietnam (USD)
+                <img src="vn.png" alt="Vietnam flag"> Vietnam-CP(USD)
             </div>
             <div class="dropdown-option" onclick="selectCountry('drc', 'cd.png')">
                 <img src="cd.png" alt="DR Congo flag"> Democratic Republic of Congo (USD)
