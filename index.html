@@ -123,8 +123,8 @@
     <!-- Custom dropdown -->
     <div class="dropdown" id="countryDropdown">
         <div class="dropdown-select" onclick="toggleDropdown()">
-            <img id="selectedFlag" src="lb.png" alt="Country flag"> 
-            <span id="selectedCountry">Liberia (USD)</span>
+            <img id="selectedFlag" src="lr.png" alt="Country flag"> <!-- Default to Liberia as per original HTML -->
+            <span id="selectedCountry">Liberia (USD)</span> <!-- Default to Liberia -->
         </div>
         <div class="dropdown-options">
             <div class="dropdown-option" onclick="selectCountry('liberia', 'lr.png')">
@@ -168,14 +168,32 @@
 </div>
 
 <script>
-    let selectedCountry = "liberia"; // Default selected country
+    let selectedCountry = "liberia"; // Default selected country, matches default display
+
+    // Initialize default selection display based on the 'selectedCountry' variable
+    // This ensures the initial display matches the 'selectedCountry' variable
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const options = document.querySelectorAll('.dropdown-option');
+        for (let option of options) {
+            if (option.getAttribute('onclick').includes(`selectCountry('${selectedCountry}'`)) {
+                const flagImg = option.querySelector('img');
+                const textNode = Array.from(option.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                if (flagImg && textNode) {
+                    document.getElementById("selectedFlag").src = flagImg.src;
+                    document.getElementById("selectedCountry").textContent = textNode.textContent.trim();
+                }
+                break;
+            }
+        }
+    });
+
 
     const feeData = {
         liberia: { feeRate: 0.03, cap: 10 },
         haiti: { feeRate: 0.025, cap: 12 },
         lebanon: { feeRate: 0.035, cap: 20 },
         vietnam: { feeRate: 0.02, cap: 15 },
-        drc: { feeRate: 0.0275, cap: 15 },
+        // drc: { feeRate: 0.0275, cap: 15 }, // This entry is not used for DRC due to specific logic below
         elsalvador: { feeRate: 0.03, cap: 7.49 },
         peru: { feeRate: 0.025, cap: 10 },
         nicaragua: { feeRate: 0.024, cap: 7.49 }
@@ -186,26 +204,93 @@
         options.style.display = options.style.display === 'block' ? 'none' : 'block';
     }
 
-    function selectCountry(country, flagSrc) {
-        selectedCountry = country;
+    function selectCountry(countryKey, flagSrc) {
+        selectedCountry = countryKey;
+
+        // Find the selected option to get its full text for display
+        const options = document.querySelectorAll('.dropdown-option');
+        let displayCountryText = "";
+        for (let option of options) {
+            // The onclick attribute string comparison needs to be exact
+            if (option.getAttribute('onclick') === `selectCountry('${countryKey}', '${flagSrc}')`) {
+                const textNode = Array.from(option.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                if (textNode) {
+                    displayCountryText = textNode.textContent.trim();
+                }
+                break;
+            }
+        }
+        // Fallback if text not found (should not happen if HTML is correct)
+        if (!displayCountryText) {
+            displayCountryText = `${countryKey.charAt(0).toUpperCase() + countryKey.slice(1)} (USD)`;
+        }
+
         document.getElementById("selectedFlag").src = flagSrc;
-        document.getElementById("selectedCountry").textContent = `${country.charAt(0).toUpperCase() + country.slice(1)} (USD)`;
+        document.getElementById("selectedCountry").textContent = displayCountryText;
         document.querySelector('.dropdown-options').style.display = 'none';
+        document.getElementById("result").textContent = ""; // Clear previous result
     }
 
     function calculateRefund() {
-        const amount = parseFloat(document.getElementById("amount").value);
+        const amountInput = document.getElementById("amount");
+        const amount = parseFloat(amountInput.value);
 
         if (isNaN(amount) || amount <= 0) {
             document.getElementById("result").textContent = "Please enter a valid amount.";
             return;
         }
 
-        const { feeRate, cap } = feeData[selectedCountry];
-        const fee = Math.min(amount * feeRate, cap);
+        let fee;
+
+        if (selectedCountry === "drc") {
+            // Fee calculation for DRC based on the specified tiers:
+            // Send < $100: $2.99
+            // Send < $200: $3.99
+            // Send < $300: $5.99
+            // Send < $500: $9.99
+            // Send < $1,000: $14.99
+            // Send over $1,000: $19.99 max fee
+            if (amount < 100) {
+                fee = 2.99;
+            } else if (amount < 200) { // 100 <= amount < 200
+                fee = 3.99;
+            } else if (amount < 300) { // 200 <= amount < 300
+                fee = 5.99;
+            } else if (amount < 500) { // 300 <= amount < 500
+                fee = 9.99;
+            } else if (amount < 1000) { // 500 <= amount < 1000
+                fee = 14.99;
+            } else { // amount >= 1000
+                fee = 19.99;
+            }
+        } else {
+            // Existing fee calculation for other countries
+            if (feeData[selectedCountry]) {
+                const { feeRate, cap } = feeData[selectedCountry];
+                fee = Math.min(amount * feeRate, cap);
+            } else {
+                // If country is not in feeData (e.g., a new one added to dropdown but not here)
+                // As per legend, no fees.
+                fee = 0;
+            }
+        }
+
         const totalRefund = amount + fee;
 
-        document.getElementById("result").textContent = `Total Refund Amount: $${totalRefund}`;
+        document.getElementById("result").textContent = `Total Refund Amount: $${totalRefund.toFixed(2)}`;
+    }
+
+    // Optional: Close dropdown if clicked outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropdown-select') && !event.target.closest('.dropdown-select')) {
+            var dropdowns = document.getElementsByClassName("dropdown-options");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.style.display === 'block') {
+                    openDropdown.style.display = 'none';
+                }
+            }
+        }
     }
 </script>
 </body>
